@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="validation-processing" doc:id="5b6ad6de-f39c-47e6-8949-96e31937d817" >
+		<logger level="INFO" doc:name="Logger" doc:id="3128504f-9ee6-4820-8405-e2bb16de8971" message="validation-processing entry payload #[payload]"/>
+		<validation:validate-size doc:name="Validate size" doc:id="47bd9dc2-d82a-4705-900d-fd845636e5a9" value="#[payload]" max="20"/>
+		<logger level="INFO" doc:name="Logger" doc:id="26c2f81b-b71e-4280-b907-4c0ffea1dce2" message="validation-processing exit"/>
+	</flow>
+</mule>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="crypto" doc:id="d834ae42-7efa-4e45-b73d-d9c3724331ab" >
+		<ee:transform doc:name="HmacSHA256" doc:id="829650ed-611c-479c-9d94-a8e743898f3a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+import dw::Crypto
+---
+{
+	"X-Order-Desh-Hash": Crypto::HMACWith("securityKey" as Binary,(write(payload default {}, "application/json")) as Binary, "HmacSHA256")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="toBase64, fromBase64, BlowfishUtils.decode2" doc:id="5fde5db7-23d8-4981-854f-2533e4ece197" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Binaries
+import java!com::company::BlowfishUtils
+---
+{
+	toBase64:toBase64("This is base64 test. Can use pdf file payload or any text." as Binary),
+	fromBase64:fromBase64("VGhpcyBpcyBiYXNlNjQgdGVzdC4gQ2FuIHVzZSBwZGYgZmlsZSBwYXlsb2FkIG9yIGFueSB0ZXh0Lg=="),
+	"BlowfishUtils.decode2": BlowfishUtils::decrypt2("cryptokey","rCGIeqwxUzR9yksfUxWegCS+1721q++u")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

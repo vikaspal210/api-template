@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="dataweave" doc:id="740fce1e-a301-465c-bdb9-a634241d2426" >
+		<ee:transform doc:name="format Number" doc:id="722eaab9-d8d0-4cb1-b1c6-a70193934478" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"2000": "2000" as Number {format: "#.#"} as String {format: "#"} as Number,
+	"2000.00": "2000.00" as Number {format: "#.#"} as String {format: "#"} as Number,
+	"2000.99": "2000.99" as Number {format: "#.#"} as String {format: "#"} as Number,
+	"2000.44": "2000.44" as Number {format: "#.#"} as String {format: "#"} as Number,
+	"2000": "2000" as Number {format: "#.#"} as String {format: "#"} as Number,
+	"2000": "2000" as Number {format: "#.#"} as String {format: "#"} as Number,
+	"2000": 2000.0 as Number {format: "#"},
+	"2000round": round(2000.0)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="XML Transformation - LTI" doc:id="72e97ef9-f01f-4fa9-9fb0-6e4380a396e9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+var inputt = {
+"data" : [
+{month: 1,
+Revenue: 150},
+{month:2,
+Revenue: 250}
+]}
+
+var xml_sol1= bill:{(inputt.data map {
+    (janMonth: {Revenue: $.Revenue}) if( $.month == 1 ),
+     (febMonth: {Revenue: $.Revenue}) if( $.month == 2 ),
+})}
+
+var months= ["janMonth", "febMonth"]
+var xml_sol2= bill: {(inputt.data map {((months[(($.month) - 1)]) : {Revenue: $.Revenue})})}
+---
+xml_sol2]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="map" doc:id="07ff6f2c-4bbc-4612-9deb-9cf86e66d2d4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var map_1=[1,2,3,4,5]
+var map_2=[
+  { "id": 1, "name": "Archer" },
+  { "id": 2, "name": "Cyril"  },
+  { "id": 3, "name": "Pam"    }
+]
+var map_3=[
+  { "name": "Archer" },
+  { "name": "Cyril"  },
+  { "name": "Pam"    }
+]
+var map_4=[
+  { 
+    "name": "Archer",
+    "jobs": [
+      { "type": "developer" },
+      { "type": "investor"  },
+      { "type": "educator"  } 
+    ] 
+  },
+  {
+    "name": "Cyril",
+    "jobs": [
+      { "type": "developer"    },
+      { "type": "entrepreneur" },
+      { "type": "lion tamer"   }
+    ]
+  } 
+]
+
+
+---
+{
+	map_1: map_1 map ($+10),
+	
+	map_2: map_2 map($.id),
+	
+    map_3: map_3 map {	id:$$+1,	name:$.name},
+    
+    map_4: map_4 map {
+	num:$$+1,
+	name:$.name,
+	jobs:$.jobs map {
+		num: $$ + 1,
+		"type":$."type"
+	}
+},
+	map_5: "map_5"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="collapase key" doc:id="e7765c8a-8ce9-4a81-ba3d-3593d33f90e4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var in={
+  "Person" : {
+    "Name"      : "Jerneydude",
+    "Profession": "Software Dev"
+  },
+  "Address" : {
+    "Line1" : "1234 Mayne Street",
+    "City"  : "Denver",
+    "State" : "CO"
+  }
+}
+var in2=in pluck($)
+
+var sol=in mapObject(value,key)-> {
+	(value mapObject(valueInside,keyInside)->{
+		((key)++(keyInside)):valueInside
+	})
+}
+
+var t1=["Person","Address"]
+var t2=[{
+    "Name"      : "Jerneydude",
+    "Profession": "Software Dev"
+  },
+  {
+    "Line1" : "1234 Mayne Street",
+    "City"  : "Denver",
+    "State" : "CO"
+  }
+  ]
+---
+sol]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="reduce" doc:id="9514dd22-ff86-49b2-a3b3-a94081f772eb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var inp=[
+  {
+    "name": "size",
+    "options": [
+      {
+        "value": 12345,
+        "label": "small"
+      },
+      {
+        "value": 23456,
+        "label": "medium"
+      },
+      {
+        "value": 34567,
+        "label": "large"
+      }
+    ]
+  },
+  {
+    "name": "fabric",
+    "options": [
+      {
+        "value": 45678,
+        "label": "cotton"
+      },
+      {
+        "value": 56789,
+        "label": "silk"
+      },
+      {
+        "value": 67980,
+        "label": "polyester"
+      }
+    ]
+  }
+]
+var sol=inp reduce ((value, parent={})-> parent ++ {(value.name):value.options 
+	reduce((op,child={})->child ++ {(op.label):(op.value)})
+}
+)
+//var inter=inp.options reduce((op,child={})->child ++ {(op.label):(op.value)}) 
+var sol_NO_reduce=inp groupBy($.name) mapObject{
+	($$):$.options[0] reduce ((val,child={})->child ++ {(val.label):(val.value)})
+}
+var que=[
+    {
+      "value": 45678,
+      "label": "cotton"
+    },
+    {
+      "value": 56789,
+      "label": "silk"
+    },
+    {
+      "value": 67980,
+      "label": "polyester"
+    }
+  ]
+---
+que reduce ((v,c={})->c++{(v.label):(v.value)})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="reduce 2" doc:id="a05e5df2-b069-46b0-85d9-62e7083ebec3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var arr = [
+  {dev:  "c6824476-b7e2-4e8a-9281-bdc40663bb93"},
+  {test: "b1749c38-1e25-42f7-b928-43041c80b496"},
+  {qa:   "eda249c3-d85a-4031-bbda-88efd30bba8c"},
+  {prod: "7f44b450-18ff-45fa-85f3-8ef5c82b4989"}
+]
+---
+{(arr)}
+//arr reduce((env, obj={})-> obj ++ env)
+//arr reduce ($$ ++ $)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

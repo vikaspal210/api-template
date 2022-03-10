@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="common-error-handler" doc:id="d3e035f8-57b2-4b4f-b0f1-dc1f1a951f96" >
+		<on-error-continue enableNotifications="true" logException="false" doc:name="On Error Continue" doc:id="748f6ac8-e706-40a3-8f38-8ce9559008d8" when='#[error.description contains "until-successful"]'>
+			<set-variable value="#[vars.retryErrorCode default 500]" doc:name="Set httpStatus 500" doc:id="20aeee53-5bc9-4d2f-9b82-f5dd55b87496" variableName="httpStatus" />
+			<ee:transform doc:name="Transform Message" doc:id="9623ce12-e7e0-4ba6-b03d-fce69fb78562">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorMesage: error.errorMessage,
+	errorDescription: error.description,
+	errorType: error.errorType,
+	failingComponent: error.failingComponent,
+	httpStatus: vars.httpStatus,
+	retryErrorMessage: vars.retryErrorMessage.message,
+	retryErrorCode: vars.retryErrorCode
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="6a65a001-cfc3-4e94-a1de-62d7b940a632" message="#[error.errorType.asString] exit log | payload: #[payload] | mule.env: ${mule.env}" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3cc9390f-6749-4bac-bab2-22569981be59" when='#[error.errorType.asString == "HTTP:UNAUTHORIZED"]'>
+			<set-variable value="#[vars.retryErrorCode default 500]" doc:name="Copy_of_Set httpStatus 500" doc:id="5a83db19-cf06-4753-afee-5c74ac4e6fb9" variableName="httpStatus" />
+			<ee:transform doc:name="Copy_of_Transform Message" doc:id="4fb8c063-4d6d-4acb-a3e6-660112a6d099">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	errorMesage: error.errorMessage,
+	errorDescription: error.description,
+	errorType: error.errorType,
+	failingComponent: error.failingComponent,
+	httpStatus: vars.httpStatus,
+	retryErrorMessage: vars.retryErrorMessage,
+	retryErrorCode: vars.retryErrorCode
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Copy_of_Logger" doc:id="51800f10-7d0e-4ed6-9b00-39f2e0efb5b4" message="#[error.errorType.asString] exit log | payload: #[payload] | mule.env: ${mule.env}" />
+		</on-error-continue>
+	</error-handler>
+</mule>

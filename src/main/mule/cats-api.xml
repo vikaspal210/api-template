@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="cats-api-processing" doc:id="241a44b5-e772-4ade-9491-eed231deb62b" >
+		<logger level="INFO" doc:name="Logger" doc:id="62164638-710d-458c-a6a6-b17c38fb2f1f" message="cats-api-processing started"/>
+		<ee:transform doc:name="Set path. method" doc:id="b7db130a-1c94-405a-a3c3-3c8b369dd0f6" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="method" ><![CDATA[%dw 2.0
+output application/java
+---
+p('https.cats.method')]]></ee:set-variable>
+				<ee:set-variable variableName="path" ><![CDATA[%dw 2.0
+output application/java
+---
+p('https.cats.path')]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="ref: cats-api-outbound" doc:id="a22b7ca4-43fa-4e61-8247-8d4843ca926b" name="cats-api-outbound" />
+		<ee:transform doc:name="Set catsUrl" doc:id="ea6b90ce-3368-462d-9b22-13c1d7b80c62" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="catsUrl" ><![CDATA[%dw 2.0
+output application/java
+---
+payload[0].url]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="ref: cats-api-url-outbound" doc:id="e0ca812b-e160-41c6-8bc3-c7c23f19224b" name="cats-api-url-outbound" />
+		<logger level="INFO" doc:name="Logger" doc:id="40e28d1b-3606-460a-aa0d-cf9da479f560" message="cats-api-processing ended"/>
+	</sub-flow>
+	<sub-flow name="cats-api-url-outbound" doc:id="9ed49f6a-5e55-4588-adc0-c701ec090df6" >
+		<logger level="INFO" doc:name="Logger" doc:id="bad44492-7475-4f33-9768-fc69d0363c29" message="cats-api-url-outbound started"/>
+		<http:request method="GET" doc:name="Cats API URL Request" doc:id="56bac6a2-7d41-4e39-8e18-7b02ab546eab" url="#[vars.catsUrl]" />
+		<logger level="INFO" doc:name="Logger" doc:id="b2a2bc6e-1ba8-4f1e-b8d1-ea687b07aa53" message="cats-api-url-outbound ended"/>
+	</sub-flow>
+	<sub-flow name="cats-api-request" doc:id="16974b44-64bb-47b0-8eed-679ac23e1ed2" >
+		<http:request method="#[vars.method]" doc:name="Cats API Request" doc:id="23f89089-209c-484e-957d-b1bbf4cccfdb" config-ref="Cats_API_HTTPS_Request_configuration" path="#[vars.path]" />
+	</sub-flow>
+	<sub-flow name="cats-api-outbound" doc:id="a3c90834-3223-43b7-8948-6f1d1ec0dd5b">
+		<logger level="INFO" doc:name="Logger" doc:id="3d9708e8-1e4b-416f-a5e8-31424094693d" message="cats-api-outbound started"/>
+		<try doc:name="Try" doc:id="38881240-bdaf-4a60-bda1-a3e19af24bcf" >
+			<flow-ref doc:name="ref: cats-api-request" doc:id="cfecccb9-9160-4e46-97db-ff2d68b797c3" name="cats-api-request" />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="false" doc:name="On Error Propagate" doc:id="d2ae6b3b-e00d-49e6-b490-1f85990ac674" when='#[error.errorType.asString == "HTTP:NOT_FOUND"]'>
+					<ee:transform doc:name="retryErrorMessage retryErrorCode" doc:id="46ba5736-292a-4737-bec3-a4d49b4c2409">
+						<ee:message>
+						</ee:message>
+						<ee:variables>
+							<ee:set-variable variableName="retryErrorCode"><![CDATA[%dw 2.0
+output application/java
+---
+error.muleMessage.typedAttributes.statusCode]]></ee:set-variable>
+							<ee:set-variable variableName="retryErrorMessage"><![CDATA[%dw 2.0
+output application/java
+---
+error.muleMessage.typedValue default error.description]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<until-successful maxRetries="3" doc:name="Until Successful" doc:id="952f78d9-0572-40dd-911b-89c54fee4d33" millisBetweenRetries="3000">
+						<flow-ref doc:name="ref: cats-api-request" doc:id="3e1f292a-11d7-472d-8175-13011f891b79" name="cats-api-request" />
+					</until-successful>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="865807c0-4b60-45a2-9a9b-7d68d8352d7b" message="cats-api-outbound ended" />
+	</sub-flow>
+</mule>

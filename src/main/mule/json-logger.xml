@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="tree" doc:id="d2501983-795a-460a-898f-8bd1522bba4f" >
+		<ee:transform doc:name="Transform Message" doc:id="6fad6460-657f-43ec-a4dd-17d31d43af9f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+import * from dw::util::Tree
+var truncateFieldsList= Mule::p('json.logger.truncateFields') splitBy ","
+---
+payload mapLeafValues if(truncateFieldsList contains $$[-1].selector) "****" else $]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

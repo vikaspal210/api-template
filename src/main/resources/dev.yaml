@@ -1,0 +1,8 @@
+https:
+  #https://api.thecatapi.com:443/v1/images/search
+  cats:
+    host: "api.thecatapi.com"
+    port: "443"
+    method: "GET"
+    path: "/imagess/search"
+    response.timeout: "30000"

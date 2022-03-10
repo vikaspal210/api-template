@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<ee:object-store-caching-strategy name="5Min_Caching_Strategy" doc:name="Caching Strategy" doc:id="a1fcfb0d-4512-44a4-96b0-12d9b1a0c293" keyGenerationExpression='#["cacheKey"]' >
+		<os:private-object-store maxEntries="1" entryTtl="5" entryTtlUnit="MINUTES" expirationInterval="5" />
+	</ee:object-store-caching-strategy>
+	<sub-flow name="cache-processing" doc:id="3b3f0702-de13-479a-9abc-d5942cf98778" >
+		<logger level="INFO" doc:name="Logger" doc:id="c36af37d-ab42-415c-b97e-17d4c4199994" message="payload:#[payload] cache-processing started"/>
+		<ee:cache doc:name="Cache" doc:id="26361b44-4ad5-48eb-88d4-a23b3ceaf2f4" cachingStrategy-ref="5Min_Caching_Strategy">
+			<flow-ref doc:name="ref: cahce-dummy-outbound" doc:id="b83027fe-6a2b-4de5-b34c-76c69fbcb731" name="cahce-dummy-outbound"/>
+			<logger level="INFO" doc:name="Logger" doc:id="32fff837-59e9-4a32-a698-8b9b079b02e4" message="inside cache call"/>
+		</ee:cache>
+		<logger level="INFO" doc:name="Logger" doc:id="1c51981f-3ad5-4abb-9ea0-cf2f4b4285fe" message="payload:#[payload] cache-processing ended"/>
+	</sub-flow>
+	<sub-flow name="cahce-dummy-outbound" doc:id="563b474e-bacd-4b61-b9d5-358b42f4b56f" >
+		<ee:transform doc:name="Transform Message" doc:id="7ad4f0cb-1942-4c74-8b10-3e66512cd65d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"value from cache outbound"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

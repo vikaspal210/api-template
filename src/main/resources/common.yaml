@@ -1,0 +1,14 @@
+apikit:
+  api: "api/api.raml"
+  #api: "resource::${project.groupId}:api-template:${raml.api.version}:raml:zip:api.raml"
+  
+http:
+  host: "0.0.0.0"
+  port: "8081"
+  connectionIdleTimeout: "300000"
+  listener:
+    path: "/*"
+    
+https:
+  host: ""
+  port: "443"

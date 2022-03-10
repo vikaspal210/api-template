@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+	<global-property doc:name="Global Property" doc:id="46133fb2-d4e5-4f78-95c4-2c0167f95453" name="mule.env" value="dev" />
+	<configuration-properties doc:name="Configuration properties" doc:id="115aaaec-a95d-4afa-80b5-9f076f96f943" file="${mule.env}.yaml" />
+	<global-property doc:name="Global Property" doc:id="61337b72-537d-429e-bcad-35f4a29396aa" name="mule.key" value="cryptokey" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a3abd6b1-cf3d-46a6-bb2a-7e03f7d612b8" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="f7bcf924-289e-44f0-b42d-eec88180a856" file="${mule.env}-secure.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="f9430ddd-201c-4066-9e7d-5d92c1afe660" file="common.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="5996dd36-b754-4930-84bc-b3cccf9964a7" file="${mule.env}-secure.yaml" key="${mule.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<apikit:config outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" doc:name="Router" doc:id="1585f539-c696-4737-aabe-6d8a9e487393" name="api-config" api="${apikit.api}"/>
+	<http:request-config name="Cats_API_HTTPS_Request_configuration" doc:name="HTTP Request configuration" doc:id="aeff0a64-9a5f-4724-b14c-dee6935d8045" responseTimeout="${https.cats.response.timeout}" basePath="/v1">
+		<http:request-connection protocol="HTTPS" host="${https.cats.host}" port="${https.cats.port}" />
+	</http:request-config>
+</mule>

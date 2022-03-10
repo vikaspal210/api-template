@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="dateFlow" doc:id="568b039b-5d11-45a6-b75d-30fe39f1be2b" >
+		<ee:transform doc:name="to_date" doc:id="e07ef3a1-4516-40a8-a545-cafe7a42c924" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+import * from dw::core::Strings
+var dateMarker = "to_date("
+fun parseDate(dateString) = (
+	substringBefore(substringAfter(dateString,dateMarker),",") as DateTime {format: substringBefore(substringAfterLast(dateString, ","), ")")} default null
+)
+var testPayload = {
+	"record": {
+		"date": "to_date(" ++ (now() as DateTime) ++ ",yyyy-MM-dd'T'HH:mm:ss.XXX)",
+		"nonDate":"value"
+	}
+}
+var value = (testPayload.record default {} mapObject ((v,k)->
+	if((not isEmpty(v)) and (v is String) and (v startsWith dateMarker))
+	(k):parseDate(v)
+	else
+	(k):(v)
+))
+//"2021-11-18T13:53:49.9034466+05:30"
+
+var sam = testPayload.record.date
+---
+//now() as DateTime {format: "yyyy-MM-dd'T'HH:mm:ss.XXX"}
+//"to_date(" ++ now() as DateTime ++ ",yyyy-MM-dd'T'HH:mm:ss.XXX)"
+//tringBefore(substringAfter(sam,dateMarker),",") as DateTime {format: 
+
+substringBefore(substringAfter(sam,dateMarker),",") as DateTime {format: "yyyy-MM-dd'T'HH:mm:ss.XXX"}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="dob ++ time" doc:id="dee17a1f-8d92-476a-8df9-165c09d2d575" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var time = |00:00:00.000| as Time {format: "h:m:s a"}
+---
+{
+	time:time,
+	dob: (("1995-12-01" ++ time) as DateTime) as String {format: "M/d/yyyy hh:mm:ss a"},
+	"M/d/yyyy h:m:s a": now() as String {format: "M/d/yyyy h:m:s a"},
+	"MM/dd/yyyy hh:mm:ss a": now() as String {format: "MM/dd/yyyy hh:mm:ss a"}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="formatPhone" doc:id="1693b9cc-0364-44ca-a227-a8c670caa5a0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+fun formatPhone(number) = (number default "") replace /[ ()-]/ with ""
+---
+{
+	phone: formatPhone("(123)-00-88")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Add Subtract Time" doc:id="5fbe771e-b353-4452-9321-28b7d44b51f2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var numberOfDays = 3
+fun hasItBeenNumberOfHours(numberOfHours,lastModified) = (now() - lastModified)/ 3600 >= numberOfHours
+fun hasItBeenNumberOfDays(numberOfDays,lastModified) = (now() - lastModified)/ 86400 >= numberOfDays
+---
+{
+  yesterday: now() - |P1D|,
+  theOtherDay: now() - ("P$(numberOfDays)D" as Period),
+  a: |2003-10-01| - |P1Y|,
+  b: |P1Y| - |2003-10-01|,
+  c: |2003-10-01T23:57:59Z| - |P1Y|,
+  d: |2003-10-01T23:57:59Z| + |P1Y|,
+  e: |2003-10-01T23:57:59| - |P1Y|,
+  f: |PT9M| - |23:59:56|,
+  g: |23:59:56| + |PT9M|,
+  h: |23:59:56-03:00| - |PT9M|,
+  u: |23:59:56-03:00| - |22:59:56-03:00|,
+  j: |23:59:56-03:00| - |22:59:56-00:00|,
+  k: |2003-10-01T23:57:59| - |P2Y9M1D| - |PT57M59S| + |PT2H|,
+  l: |23:59:56| - |22:59:56|,
+  o: |2003-10-01| - |2002-09-23|,
+  p: |2003-10-01T23:57:59Z| - |2002-10-01T23:57:59Z|,
+  q: |2003-10-01T23:57:59| - |2002-10-01T23:57:59|,
+  has4Hours: (now() - (now() - |P1D|))/ 86400,
+  hasItBeenNumberOfHours: hasItBeenNumberOfHours(24,(now() - |PT23H|)),
+  hasItBeenNumberOfDays: hasItBeenNumberOfDays(1,(now() - |P2D|))
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

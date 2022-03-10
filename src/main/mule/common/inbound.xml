@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="api-main-nonssl" doc:id="1b75217e-4012-4ea2-92b6-1aaf9f6e5c4a">
+		<http:listener doc:name="Listener" doc:id="ba2a7481-0fab-480a-a841-83547202c58f" config-ref="HTTP_Listener_config" path="${http.listener.path}">
+			<http:response statusCode="#[vars.httpStatus]" />
+		</http:listener>
+		<apikit:router doc:name="APIkit Router" doc:id="624c5926-18b7-434b-b45e-6a8054906231" config-ref="api-config"/>
+		<error-handler ref="common-error-handler" />
+	</flow>
+	<flow name="get:\test:api-config" doc:id="7f3ca33e-926c-4e63-9792-a58a4404f3d9" >
+		<logger level="INFO" doc:name="Log Entry" doc:id="47c4ee0a-caff-46af-9274-f77aa23ad9e2" message="#[correlationId ] Entry Log | payload: #[payload] | attributes: #[attributes.headers.authorization] | secureProperty: ${secure::test} | mule.env: ${mule.env}" category="abc.com" />
+		<flow-ref doc:name="ref: flow1" doc:id="c32f7217-dcf5-4fc1-b402-92f545cf90d3" name="flow1"/>
+		<flow-ref doc:name="ref: flow2" doc:id="023e2fd9-abaf-42b9-a350-cdd6985e9563" name="flow2" />
+		<logger level="INFO" doc:name="Log Exit" doc:id="461543df-901b-4b43-81aa-098af2190908" message="|#[correlationId] | mule.env: ${mule.env} | Entry Log | payload: #[payload]  " category="abc.com" />
+	</flow>
+	<flow name="get:\cats-api:api-config" doc:id="ef5e332b-7347-4ffc-b90d-91f523e71cbf" >
+		<logger level="INFO" doc:name="Logger" doc:id="a929c5a1-66aa-47a8-90e1-28222abf80bf" message="get:\cats-api:api-config started"/>
+		<flow-ref doc:name="ref: cats-api-processing" doc:id="3c5a5a46-605a-4fcd-9f61-8f36f1b779e4" name="cats-api-processing"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d10de2af-8532-443a-812a-9ff7c04a1760" message="get:\cats-api:api-config ended"/>
+	</flow>
+	<flow name="post:\validation:api-config" doc:id="ffa3f3d4-fbe0-4c66-bede-c540f61f20a9" >
+		<logger level="INFO" doc:name="Logger" doc:id="a7ae6594-4a38-4081-95f2-a9e62f61c090" message="post:\validation:api-config started" />
+		<flow-ref doc:name="ref: validation-processing" doc:id="f7b11ea9-2130-41c8-ad06-48b494b64523" name="validation-processing" />
+		<logger level="INFO" doc:name="Logger" doc:id="f3895b25-8431-4d6d-ae7a-40309ceedb87" message="post:\validation:api-config ended" />
+	</flow>
+	<flow name="post:\upload-form-data:api-config" doc:id="44aef224-408b-4bcd-ac4b-f95412ca325a" >
+		<logger level="INFO" doc:name="Log Entry" doc:id="24b7b97f-bfb8-4053-99d4-f50edff5f68d" message="#[correlationId] Entry Log | payload: #[payload] | mule.env: ${mule.env} | post:\upload request received" category="abc.com" />
+		<flow-ref doc:name="ref: upload-multipart-form-data-processing" doc:id="4043ac0d-38f2-4a75-87a4-7f1385608407" name="upload-multipart-form-data-processing" />
+		<logger level="INFO" doc:name="Log Exit" doc:id="f679dcfc-efd6-4f84-9424-3218996a8ac7" message="#[correlationId] Exit Log | payload: #[payload] | mule.env: ${mule.env} | post:\upload response #[payload]" category="abc.com" />
+	</flow>
+	<flow name="post:\call-form-data:api-config" doc:id="5cd49135-3500-41aa-8acf-5ad62245eea8" >
+		<logger level="INFO" doc:name="Log Entry" doc:id="a6e1ce63-4937-45aa-a3f4-b95c26ab10aa" message="#[correlationId] Entry Log | payload: #[payload] | mule.env: ${mule.env} | post:\upload request received" category="abc.com" />
+		<flow-ref doc:name="ref: call-multipart-form-dat-processing" doc:id="925902c3-a593-4328-a1c5-f9c204fab64e" name="call-multipart-form-dat-processing" />
+		<logger level="INFO" doc:name="Log Exit" doc:id="b3a5445f-4610-4d99-a10f-3f32f6308090" message="#[correlationId] Exit Log | payload: #[payload] | mule.env: ${mule.env} | post:\upload response #[payload]" category="abc.com" />
+	</flow>
+	<flow name="get:\cache:api-config" doc:id="98713bf7-55e9-4677-936f-d4f2aad5fb8f" >
+		<logger level="INFO" doc:name="Log Entry" doc:id="ab4ed41d-ee4a-4800-88b2-046509c4d462" message="#[correlationId] Entry Log | payload: #[payload] | mule.env: ${mule.env} | post:\upload request received" category="abc.com" />
+		<flow-ref doc:name="ref: cache-processing" doc:id="d55b147a-12bc-447c-815e-8494b8909ea0" name="cache-processing" />
+		<logger level="INFO" doc:name="Log Exit" doc:id="9127c98b-f131-4445-a060-52c7fca2162b" message="#[correlationId] Exit Log | payload: #[payload] | mule.env: ${mule.env} | post:\upload response #[payload]" category="abc.com" />
+	</flow>
+	<flow name="flow2" doc:id="b240d3f5-d462-4082-99d7-e5e0886ae929" >
+		<logger level="INFO" doc:name="Log Entry" doc:id="b2be04e2-0375-4d40-9e00-8e1b7ee9c4e3" message="|#[correlationId] | mule.env: ${mule.env} | Entry Log | payload: #[payload]  " category="abc.com" />
+		<logger level="INFO" doc:name="Log Exit" doc:id="bb526a2c-840d-4eb1-948d-f29e17715f6d" message="|#[correlationId] | mule.env: ${mule.env} | Exit Log | payload: #[payload]  " category="abc.com" />
+	</flow>
+	<flow name="flow1" doc:id="1306973c-872e-4ec3-a0d1-b299ab3c9331">
+		<logger level="INFO" doc:name="Logger" doc:id="1d5b61ea-3e83-4da9-836d-6a714a76dfe4" message="#[correlationId ] Entry Log | payload: #[payload] | attributes: #[attributes.headers.authorization] | secureProperty: ${secure::test} | mule.env: ${mule.env}" category="abc.com" />
+		<validation:is-true doc:name="Is true" doc:id="d3163515-1e84-4f20-bd89-ce886c71eb94" message="#[!(isEmpty(payload.a)) or !(isEmpty(payload.b))]" />
+		<ee:transform doc:name="Transform Message" doc:id="74159d0d-7131-4e86-996c-52532316c7bb">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b7d00111-b64c-43ba-b911-e8a4720759c2" message="Exit Log | payload: #[payload] | mule.env: ${mule.env}" category="abc.com" />
+		<error-handler ref="common-error-handler" />
+	</flow>
+	<sub-flow name="inboundSub_Flow" doc:id="1378b0ff-d547-4591-98a7-daf882478ae1" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="465fcb1d-1426-4e66-ac99-ce5eeb6ee5f3">
+			<route>
+				<ee:transform doc:name="path 1" doc:id="0c8a4bca-5025-4e3e-b93d-c0f08126c1d6">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+["MULE","add"] joinBy ":"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="7884ecf2-ed09-4d35-8900-b3d72d7d1ea2" />
+			</route>
+			<route>
+				<ee:transform doc:name="path 2" doc:id="25cd700c-d426-4586-b842-6f7ac804b9a7">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="6d160815-b653-4e8d-a8bb-3101956324c2" />
+			</route>
+		</scatter-gather>
+	</sub-flow>
+</mule>

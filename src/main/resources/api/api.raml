@@ -1,0 +1,127 @@
+#%RAML 1.0
+title: Foo Sample api. (title is mandatory)
+version: v1
+protocols: [HTTP,HTTPS]
+baseUri: http://localhost:8081/
+mediaType: application/json
+
+securitySchemes:
+  basicAuth:
+    description: Each requerst must have headers.
+    type: Basic Authentication
+    describedBy:
+      headers:
+        Authorization:
+          description: Used to send Base64-encoded "username:password" credentials
+          type: string
+      responses:
+        401:
+          description: Unauthorized. Either username password wrong or User not allowed to access.
+
+#types - Types are similar to Java classes. Multiple inheritance is allowed. Types can be split into four families: external , object , array , and scalar . Types can define two types of members: properties and facets.
+types:
+  Foo: !include types/Foo.raml
+  Bar: !include types/Bar.raml
+  Error: !include types/Error.raml
+  
+# resourceTypes - see common patterns in resources (example- /foos: /bars:)
+resourceTypes:
+  #this is creating resourceType of name collection which will has 
+  collection:
+    usage: Usage This resourceType to represent any collection of items
+    description: A collection of <<resourcePathName>>
+    get:
+      description: Get all <<resourcePathName>>, optionally filtered
+      is: [hasResponseCollection: {typeName: <<typeName>>}]
+    post:
+      description: Create a new <<resourcePathName|!singularize>>
+      is: [hasRequesItem: {typeName: <<typeName>>}]
+      responses:
+        201:
+  #this is creating resourceType of name item which will have  
+  item:
+    usage: Usethis resourceType to represent any single item 
+    description: A single <<typeName>>
+    get:
+      description: Get a <<typeName>> by id
+      is: [hasResponseItem: {typeName: <<typeName>>}, hasNotFound]
+    put:
+      description: Update a <<typeName>> by id
+      is: [hasRequesItem: {typeName: <<typeName>>}, hasNotFound]
+      responses:
+        201:
+    delete:
+      description: Delete a <<typeName>> by id
+      is: [hasNotFound]
+      responses:
+        204:  
+
+# traits - see common patterns in methods (GET,POST,PUT,PATCH,DELETE)
+traits:
+  #POST and PUT has body as common pattern
+  hasRequesItem:
+    body:
+      application/json:
+        type: <<typeName>>
+  #GET with id will have body with typeName
+  hasResponseItem:
+    responses:
+      200:
+        body:
+          application/json:
+            type: <<typeName>>
+  #GET all typeName will have body with typeName[]
+  hasResponseCollection:
+    responses:
+      200:
+        body:
+          application/json:
+            type: <<typeName>>[]
+  #All GET will have responses 404 Not Found
+  hasNotFound:
+    responses:
+      404:
+        body:
+          application/json:
+            type: Error
+            example: !include examples/Error.json
+
+#validation resource
+/validation:
+  get:
+  post:
+#test resource
+/test:
+  get:
+  post:
+/cats-api:
+  get:
+  post:
+#upload form data resource
+/upload-form-data:
+  get:
+  post:
+#call form data resource
+/call-form-data:
+  get:
+  post:
+#upload resource
+/cache:
+  get:
+#resources foos and bars      
+/foos:
+  type: {collection: {"typeName":"Foo"}}
+  get:
+    queryParameters:
+      name?: string
+      ownerName?: string
+  /{fooId}:
+    type: {item: {"typeName":"Foo"}}
+  /name/{name}:
+    get:
+      description: Get Foos of certain name
+      is: [hasResponseCollection: {typeName: Foo}]   
+/bars:
+  type: {collection: {"typeName":"Bar"}}
+  /{barId}:
+    type: {item: {"typeName":"Bar"}}

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="call_form_data_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="a17c8a4b-bb94-4d4d-accc-004a68da0667" >
+		<http:request-connection host="localhost" port="8081" connectionIdleTimeout="300000"/>
+	</http:request-config>
+	<sub-flow name="upload-multipart-form-data-processing" doc:id="2fc9e8d8-5937-4ffe-8021-2260eddee78f" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="bc4f488b-b602-4a5c-8c83-469bbe92bb87" >
+			<route >
+				<logger level="INFO" doc:name="checkbox" doc:id="d2aefce6-c41c-4d56-918b-d82aa5903b95" message="checkbox: #[payload.parts.checkbox.content]" />
+			</route>
+			<route >
+				<logger level="INFO" doc:name="password" doc:id="68c09713-3f66-4d8a-954f-a95e558f2d99" message="password: #[payload.parts.password.content]" />
+			</route>
+			<route >
+				<logger level="INFO" doc:name="text" doc:id="d4957544-7f05-4c59-b1fa-fce2602f6b78" message="text: #[payload.parts.text.content]" />
+			</route>
+			<route >
+				<logger level="INFO" doc:name="myfile" doc:id="f0dd8979-9eb5-4bbb-ac02-2b06c24b5c77" message="myfile: #[payload.parts.myfile.content]" />
+			</route>
+			<route >
+				<logger level="INFO" doc:name="fileContent" doc:id="69666f3a-ff5a-4115-bcbb-56500777b51b" message="fileContent: #[payload.parts.fileContent.content]" />
+			</route>
+		</scatter-gather>
+	</sub-flow>
+	<sub-flow name="call-multipart-form-dat-processing" doc:id="ed335e84-0fdc-46eb-a0b4-2a9b08cf6500" >
+		<ee:transform doc:name="create form data" doc:id="e4ebfa10-66ec-46c4-aa55-744ebe346de7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import dw::module::Multipart
+output multipart/form-data
+var myFileText = "File Text"
+---
+{
+    parts: {
+        checkbox: Multipart::field("checkbox", "Off"),
+        password: Multipart::field("password", "mysecret"),
+        text: Multipart::field("text", "myText"),
+        myfile: Multipart::field("myfile", myFileText, "text/plain", "myFile.txt")
+    }
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="create form data request" doc:id="5732bf0e-222a-451a-b4d1-f2db5e1b8b22" message="create form data request: #[payload]"/>
+		<until-successful maxRetries="3" doc:name="Until Successful" doc:id="c0e8c6d7-6550-45ea-83ef-2eacb1b7f915" millisBetweenRetries="1000">
+				<try doc:name="Try" doc:id="6eaea0a8-40b5-48f6-acc6-e6b67e0168fc">
+					<http:request method="POST" doc:name="/call-form-data Request" doc:id="363662f7-f60a-4394-b87f-90682a9d38e7" config-ref="call_form_data_HTTP_Request_configuration" path="/upload-form-data" />
+					<error-handler>
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="664451d6-704c-4a96-84cb-5be3e9e8aa90" type="HTTP:BAD_GATEWAY, HTTP:BAD_REQUEST, HTTP:CLIENT_SECURITY, HTTP:CONNECTIVITY, HTTP:FORBIDDEN, HTTP:INTERNAL_SERVER_ERROR, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:PARSING, HTTP:RETRY_EXHAUSTED, HTTP:SECURITY, HTTP:SERVICE_UNAVAILABLE, HTTP:TIMEOUT, HTTP:TOO_MANY_REQUESTS, HTTP:UNAUTHORIZED, HTTP:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+							<logger level="INFO" doc:name="Logger" doc:id="d8fbd239-e6ce-431d-bf5e-a46351016a02" message="not retryable errors" />
+						</on-error-continue>
+						<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f1d307c8-b47a-41c5-923c-adc62b8b2c23">
+							<set-variable value="#[error.errorMessage.typeError default error.description]" doc:name="Set httpOriginalError" doc:id="7331e47a-deef-4116-83f8-821307e791db" variableName="httpOriginalError" />
+						</on-error-propagate>
+					</error-handler>
+				</try>
+			</until-successful>
+		<logger level="INFO" doc:name="create form data response" doc:id="8a9f2e7e-6ea0-4d83-bad1-c11756f190df" message="create form data response: #[payload]" />
+	</sub-flow>
+</mule>
