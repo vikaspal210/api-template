@@ -30,5 +30,73 @@ import java!com::company::BlowfishUtils
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<ee:transform doc:name="aws signature 4" doc:id="30b996b2-fab3-47db-88c9-cd218a0fb12a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::URL
+import java!java::lang::System
+import * from dw::core::Binaries
+import dw::Crypto
+import * from dw::core::Strings
+
+		  //GET https://iam.amazonaws.com/?Action=CreateUser&UserName=sampleUserName&Version=2010-05-08
+	 var URL = "https://iam.amazonaws.com/?Action=CreateUser&UserName=sampleUserName&Version=2010-05-08"
+     var AwsConstants = {
+          awsDateTimeFormat   : "yyyyMMdd'T'HHmmss",
+          awsDateFormat       : "yyyyMMdd",
+          urlHost             : substringBefore(substringAfter(URL, "//"), "/?"),  //iam.amazonaws.com
+          urlService          : substringBefore(substringAfter(URL, "//"), "."),   //iam
+          urlRegion           : "us-east-1",
+          urlEndPoint         : substringBefore(URL, "/?"),						   //https://iam.amazonaws.com
+          urlAlgo             : "AWS4-HMAC-SHA256",
+          urlReqId            : "aws4_request",
+          urlExpiry           : "30"
+     }
+     var ln                   = System::lineSeparator()
+     var method               = "GET"
+     var uri                  = "/"
+     var accessKey            = "sampleAccessKey" //p("aws.accessKey")
+     var secretKey            = "sampleSecretKey" //p("aws.secretKey")
+     
+     var qParam               = substringAfter(URL, "?") //"Action=CreateUser&UserName=sampleUserName&Version=2010-05-08""
+     var amzDate              = ((now() >> "UTC") as String {format: AwsConstants.awsDateTimeFormat}) ++ "Z"
+     var dateStamp            = ((now() >> "UTC") as String {format: AwsConstants.awsDateFormat}) 
+     var canonicalHeader      = "host:" ++ AwsConstants.urlHost ++ ln
+     var signedHeader         = "host"
+     var credentialScope      = dateStamp ++ "/" ++ AwsConstants.urlRegion ++ "/" ++ AwsConstants.urlService ++ "/" ++ AwsConstants.urlReqId
+     var canonicalQuery       = qParam ++ "&X-Amz-Algorithm=" ++ AwsConstants.urlAlgo ++   
+                                          "&X-Amz-Credential=" ++ encodeURIComponent(accessKey ++ '/' ++ credentialScope) ++ 
+                                          "&X-Amz-Date=" ++ amzDate ++ 
+                                          "&X-Amz-Expires=" ++ AwsConstants.urlExpiry ++ 
+                                          "&X-Amz-SignedHeaders=" ++ signedHeader
+     var payloadHash          = lower(toHex(Crypto::hashWith((payload default "") as Binary, "SHA-256")) as String)
+     var canonicalRequest     = method ++ ln ++ uri ++ ln ++ canonicalQuery ++ ln ++ canonicalHeader ++ ln ++ signedHeader ++ ln ++ payloadHash
+     var hashedCanonicalRequest=lower(toHex(Crypto::hashWith(canonicalRequest as Binary, "SHA-256")) as String)
+
+     var stringToSign            = AwsConstants.urlAlgo ++ ln ++ amzDate ++ ln ++ credentialScope ++ ln ++ hashedCanonicalRequest
+     
+     var kDate 				  = Crypto::HMACBinary ("AWS4" ++ secretKey as Binary, dateStamp as Binary, "HmacSHA256")
+     var kRegion 			  = Crypto::HMACBinary (kDate  as Binary, AwsConstants.urlRegion as Binary, "HmacSHA256") 
+     var kService			  = Crypto::HMACBinary (kRegion as Binary, AwsConstants.urlService as Binary, "HmacSHA256")
+     var kSigning 			  = Crypto::HMACBinary (kService as Binary, AwsConstants.urlReqId as Binary, "HmacSHA256")
+     var signature 			  = Crypto::HMACWith (kSigning as Binary, stringToSign as Binary, "HmacSHA256")
+
+---
+{
+	qParam: qParam,
+	amzDate: amzDate,
+	dateStamp: dateStamp,
+	canonicalHeader: canonicalHeader,
+	credentialScope: credentialScope,
+	canonicalQuery: canonicalQuery,
+	canonicalRequest: canonicalRequest,
+	stringToSign: stringToSign,
+	signed_url: AwsConstants.urlEndPoint ++ "?" ++ canonicalQuery ++ "&X-Amz-Signature=" ++ signature
+}
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 </mule>
