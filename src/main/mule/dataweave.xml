@@ -220,5 +220,23 @@ var arr = [
 //arr reduce ($$ ++ $)]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<ee:transform doc:name="substitute query params" doc:id="5d7c319e-c152-4610-87a1-f35b0cb9b7bc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var dbQuery = "INSERT INTO table_name(COLUMN1,COLUMN2,COLUMN3,COLUMN4) VALUES(:value1,:value2,:value2,:value3)"
+var queryParams = {value1:"value1",value2:"value2",value3:"value3",value4:"value4"}
+var params = queryParams default {}
+fun substituteParameters(params: Object, query: String) = (keysOf(params) reduce ((key,acc=query) -> acc replace (":" ++ key) with params[key]))
+var resultQuery = substituteParameters(params, (dbQuery default ""))
+---
+{
+	query: resultQuery,
+	dbQuery: dbQuery,
+	params: params,
+	keysOf: keysOf(params)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 </mule>
