@@ -42,6 +42,7 @@ import * from dw::core::Strings
 
 		  //GET https://iam.amazonaws.com/?Action=CreateUser&UserName=sampleUserName&Version=2010-05-08
 	 var URL = "https://iam.amazonaws.com/?Action=CreateUser&UserName=sampleUserName&Version=2010-05-08"
+	 var token = "sampleToken"
      var AwsConstants = {
           awsDateTimeFormat   : "yyyyMMdd'T'HHmmss",
           awsDateFormat       : "yyyyMMdd",
@@ -59,7 +60,7 @@ import * from dw::core::Strings
      var accessKey            = "sampleAccessKey" //p("aws.accessKey")
      var secretKey            = "sampleSecretKey" //p("aws.secretKey")
      
-     var qParam               = substringAfter(URL, "?") //"Action=CreateUser&UserName=sampleUserName&Version=2010-05-08""
+     var qParam               = ( if(isEmpty(token)) "" else "X-Amz-Security-Token=sampleToken&") ++ substringAfter(URL, "?") //"Action=CreateUser&UserName=sampleUserName&Version=2010-05-08""
      var amzDate              = ((now() >> "UTC") as String {format: AwsConstants.awsDateTimeFormat}) ++ "Z"
      var dateStamp            = ((now() >> "UTC") as String {format: AwsConstants.awsDateFormat}) 
      var canonicalHeader      = "host:" ++ AwsConstants.urlHost ++ ln

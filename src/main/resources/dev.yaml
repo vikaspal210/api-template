@@ -4,5 +4,5 @@ https:
     host: "api.thecatapi.com"
     port: "443"
     method: "GET"
-    path: "/imagess/search"
+    path: "/images/search"
     response.timeout: "30000"
