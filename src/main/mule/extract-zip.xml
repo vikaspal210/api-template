@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:compression="http://www.mulesoft.org/schema/mule/compression" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/compression http://www.mulesoft.org/schema/mule/compression/current/mule-compression.xsd">
+	<sub-flow name="extract-zip-processing" doc:id="deb3cb4b-6fc1-443d-8d3f-4168c7de34c8" >
+		<logger level="INFO" doc:name="Logger Start" doc:id="631ff393-cba4-432c-b17d-6d99834bba0b" message="extract-zip-processing started" />
+		<file:read doc:name="Read" doc:id="7ee84ac1-a262-45fe-acac-421da14b62d8" path="D:\vault1\m4workspace2\api-template\src\main\resources\tasks.zip"/>
+		<compression:extract doc:name="Extract" doc:id="5a3e0be4-0a52-4f29-9004-2aac438c83dc" >
+			<compression:extractor >
+				<compression:zip-extractor />
+			</compression:extractor>
+		</compression:extract>
+		<ee:transform doc:name="read excel sheet" doc:id="aa16972a-d808-4a07-9327-8023629ca342" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+var myInput = readUrl(payload[0] default "", "application/xlsx")
+output application/json
+---
+myInput]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="log payload" doc:id="a535105f-db59-4474-9c47-5c8b90aa8fe3" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger End" doc:id="ccf3e3b7-51b8-4c5d-8a2c-34536d8a4b36" message="extract-zip-processing ended" />
+	</sub-flow>
+</mule>

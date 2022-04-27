@@ -25,6 +25,11 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 		<flow-ref doc:name="ref: cats-api-processing" doc:id="3c5a5a46-605a-4fcd-9f61-8f36f1b779e4" name="cats-api-processing"/>
 		<logger level="INFO" doc:name="Logger" doc:id="d10de2af-8532-443a-812a-9ff7c04a1760" message="get:\cats-api:api-config ended"/>
 	</flow>
+	<flow name="get:\extract-zip:api-config" doc:id="8699bbf5-112e-4f98-a015-8c185fe05216" >
+		<logger level="INFO" doc:name="Logger" doc:id="56f6177c-6cc9-4f1a-8906-2c22d9de22e1" message="get:\extract-zip:api-config started" />
+		<flow-ref doc:name="ref: extract-zip-processing" doc:id="9f2df3c6-a477-48e5-b84e-54fcc5435c99" name="extract-zip-processing" />
+		<logger level="INFO" doc:name="Logger" doc:id="83f661b7-e520-4e89-8f71-4c7cc1743752" message="get:\extract-zip:api-config ended" />
+	</flow>
 	<flow name="post:\validation:api-config" doc:id="ffa3f3d4-fbe0-4c66-bede-c540f61f20a9" >
 		<logger level="INFO" doc:name="Logger" doc:id="a7ae6594-4a38-4081-95f2-a9e62f61c090" message="post:\validation:api-config started" />
 		<flow-ref doc:name="ref: validation-processing" doc:id="f7b11ea9-2130-41c8-ad06-48b494b64523" name="validation-processing" />
