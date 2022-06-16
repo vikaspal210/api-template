@@ -95,4 +95,14 @@ output application/java
 			</route>
 		</scatter-gather>
 	</sub-flow>
+	<flow name="post:\postman-binary:api-config" doc:id="525eb910-5810-466a-9818-7f558b69e23f" >
+		<logger level="INFO" doc:name="Logger" doc:id="39a7a787-3b5a-4dcd-986e-36241a657dce" message="post:\postman-binary:api-config started" />
+		<logger level="INFO" doc:name="Log payload and attributes" doc:id="721f2321-4e6c-4c52-ad9c-60cd3188e003" message="#[output application/json ---&#10;{&#10;	attributes: attributes,&#10;	payload:payload&#10;}]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d8b81d25-5ff7-4c84-b781-c048e599056a" message="post:\postman-binary:api-config ended" />
+	</flow>
+	<flow name="post:\postman-form-data:api-config" doc:id="de54bff3-acde-45f6-815c-928d43d99ea5" >
+		<logger level="INFO" doc:name="Logger" doc:id="197b00f1-6691-43f2-b596-b8dc62dc3a8e" message="post:\postman-form-data:api-config started" />
+		<logger level="INFO" doc:name="Log payload and attributes" doc:id="212ad72e-2e8f-42fb-9301-38f2305fd747" message="#[output application/json ---&#10;{&#10;	attributes: attributes,&#10;	payload:payload&#10;}]" />
+		<logger level="INFO" doc:name="Logger" doc:id="05cc7108-8141-44d5-82b7-98ff30fb98c9" message="post:\postman-form-data:api-config ended" />
+	</flow>
 </mule>
