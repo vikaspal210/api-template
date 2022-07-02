@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="csv-multi-header-processing" doc:id="96feef8a-8c52-4766-9e72-00bbf85351fc" >
+		<ee:transform doc:name="csv multi header" doc:id="a1f22584-9435-452f-b92d-909839496d7e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv separator="|"
+
+//sample payload
+var pay = read("a,b,c,d,e,f\n1,2,3,4,5,6\n11,22,33,44,55,66\n","application/csv")
+
+//$=item|value $$=key $$$=index
+fun csv(csv,start,end) = csv map ($ mapObject (($$):$) if(($$$ >= start)and($$$<=end)))
+fun header(csv) = [csv[0] mapObject ($$):$$]
+
+//using index as csv have duplicate key names
+var csv1 = csv(pay,0,2)
+var csv2 = csv(pay,3,4)
+var csv3 = csv(pay,5,5)
+---
+csv1 ++ header(csv2) ++ csv2 ++ header(csv3) ++ csv3]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>
