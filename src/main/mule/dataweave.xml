@@ -238,5 +238,47 @@ var resultQuery = substituteParameters(params, (dbQuery default ""))
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<ee:transform doc:name="case, filterTypes" doc:id="deecfb87-081b-4e3b-a40d-73d146fc7619" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var cases = [{},"sample string",22,false,[],null] map ($ match {
+    case is Object -> "OBJECT"
+    case is String -> "STRING"
+    case is Number -> "NUMBER"
+    case is Boolean -> "BOOLEAN"
+    case is Array -> "ARRAY"
+    case is Null -> "NULL"
+    else -> "ANOTHER TYPE"
+  })
+var pay = [{"order": 1},{"order": 2},"sample string","",11,22,false,true,[1,2],null]
+var filterTypes = {
+    object: pay filter ($ is Object),
+    string: pay filter ($ is String),
+    number: pay filter ($ is Number),
+    boolean: pay filter ($ is Boolean),
+    array: pay filter ($ is Array),
+    "null": pay filter ($ is Null)
+}
+var regex = ["+1 (415) 229-2009","(647) 456-7008","ROPE0001.zip","ROPE0001processed.zip"] map ($ match {
+   case phone matches /\+(\d+)\s\((\d+)\)\s(\d+\-\d+)/ -> phone
+   case phone matches /\((\d+)\)\s(\d+\-\d+)/ -> phone
+   case zip matches /^ROPE.+[0-9]\.zip$/ -> zip
+   else -> "Not Matching":$
+ })
+var number = 1 match {
+    case num if num == 3 -> "equal"
+    case num if num > 3 -> "greater than"
+    case num if num < 3 -> "less than"
+}
+---
+{
+    cases: cases,
+    filterTypes:filterTypes,
+    regex:regex,
+    number:number
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 </mule>
