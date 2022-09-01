@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xml-module="http://www.mulesoft.org/schema/mule/xml-module" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/xml-module http://www.mulesoft.org/schema/mule/xml-module/current/mule-xml-module.xsd">
+	<sub-flow name="xpathSub_Flow" doc:id="2745b484-462c-4ef6-abd5-40e80893c28a" >
+		<ee:transform doc:name="xpath" doc:id="b28ea485-497f-4a0a-8650-35221b48b504">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="test"><![CDATA[%dw 2.0
+output application/java
+---
+XmlModule::xpath("//Field[@name='a']/text()", payload.^raw,{})[0] replace /\n|\t| / with ""]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+</mule>
