@@ -1,5 +1,6 @@
 %dw 2.0
 output text/plain
+//output application/json
 import * from dw::core::Strings
 
 var delimiter = "="
@@ -19,19 +20,17 @@ fun convertToProperties (parentKey, childKey, childNode) = (
        (generateKey(parentKey, childKey)): childNode joinBy ","
    else (generateKey(parentKey, childKey)): childNode
 )
-fun convertJSONToArray (root) = (
-   (root mapObject ( str: "$$" as String ++ delimiter ++ if($ contains " ") "\"$($)\"" else ($ as String) )).*str
-)
+fun objectToArray (root) = root pluck ("$($$)=$( if($ contains " ") "\"$\"" else $)")
 
-fun YAMLtoProperty() = convertJSONToArray(convertToProperties("", "", payload)) joinBy lineSeparator
+fun YAMLtoProperty() = objectToArray(convertToProperties("", "", payload)) joinBy lineSeparator
 
-fun jenkinsScript() = convertJSONToArray(convertToProperties("", "", payload)) map ("-D$($)") joinBy " "
+fun jenkinsScript() = convertToProperties("", "", payload) pluck ("-D$($$)=$( if($ contains " ") "\"$\"" else $)") joinBy " "
 
-fun jenkinsSecrettextVariable() = convertJSONToArray(convertToProperties("", "", payload)) map(substringAfter($,"=")) filter ($ contains "\${") map ("string(credentialsId: '$', variable: '$')") joinBy ","
+fun jenkinsSecrettextVariable() = convertToProperties("", "", payload) pluck ("$($)") filter ($ contains "\${") map ("string(credentialsId: '$', variable: '$')") joinBy ","
 
-fun pom() = convertJSONToArray(convertToProperties("", "", payload)) map (substringBefore($,"=")) map ("<$>\${$}</$>") joinBy lineSeparator
+fun pom() = convertToProperties("", "", payload) pluck ("<$$>\${$$}</$$>") joinBy lineSeparator
 ---
 //YAMLtoProperty()
-//jenkinsScript()
+jenkinsScript()
 //jenkinsSecrettextVariable()
-pom()
+//pom()
