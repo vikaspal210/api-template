@@ -1,0 +1,46 @@
+[[{
+  "data": [
+    {
+      "stuff": [
+        {
+          "onetype": [
+            {
+              "id": 1,
+              "name": "John Doe",
+              "emptyArray":[{"ddd":999}]
+            },
+            {
+              "id": 2,
+              "name": "Don Joeh"
+            }
+          ]
+        },
+        {
+          "othertype": [
+            {
+              "id": 2,
+              "company": "ACME"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "otherstuff": [
+        {
+          "thing": [
+            [
+              [],
+              42
+            ],
+            [
+              {},
+              2,
+              true
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}]]

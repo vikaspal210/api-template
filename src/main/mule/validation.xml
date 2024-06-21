@@ -1,12 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+<mule xmlns:compression="http://www.mulesoft.org/schema/mule/compression" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/compression http://www.mulesoft.org/schema/mule/compression/current/mule-compression.xsd">
 	<flow name="validation-processing" doc:id="5b6ad6de-f39c-47e6-8949-96e31937d817" >
 		<logger level="INFO" doc:name="Logger" doc:id="3128504f-9ee6-4820-8405-e2bb16de8971" message="validation-processing entry payload #[payload]"/>
-		<validation:validate-size doc:name="Validate size" doc:id="47bd9dc2-d82a-4705-900d-fd845636e5a9" value="#[payload]" max="20"/>
-		<logger level="INFO" doc:name="Logger" doc:id="26c2f81b-b71e-4280-b907-4c0ffea1dce2" message="validation-processing exit"/>
+		<compression:extract doc:name="Extract" doc:id="27e99465-63a1-4f30-855f-f051709e8714" >
+			<compression:extractor >
+				<compression:zip-extractor />
+			</compression:extractor>
+		</compression:extract>
+		<ee:transform doc:name="Transform Message" doc:id="161f49de-6e20-4afd-82b3-9f901aa2fc1e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv quoteValues=true, header=false
+---
+read(payload[0], "application/csv", {header:false})]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="missingFields" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="2630c47b-075d-416a-b175-368b5eadec73" >
+			<try doc:name="Try" doc:id="ce252255-a1df-4ab6-9ae9-3511e04af0bc" >
+				<validation:all doc:name="All" doc:id="51ca87e8-e826-4501-ad99-39655ec995b4">
+				<validation:is-true doc:name="Is true" doc:id="ff101d1e-4dfe-4785-93ba-2c371c2241c6" expression='#[output application/json --- payload[0][0] !=  ""]' message="col 0"/>
+					<validation:is-true doc:name="Copy_of_Is true" doc:id="735f25d2-b1cc-456c-9807-27e9bf66a021" expression='#[output application/json --- payload[0][1] !=  ""]' message="col 1" />
+					<validation:is-true doc:name="Copy_of_Copy_of_Is true" doc:id="d0cdae99-c392-4fbf-ad6a-3c8a82d448c7" expression='#[output application/json --- payload[0][2] !=  ""]' message="col 2" />
+					<validation:is-true doc:name="Copy_of_Copy_of_Copy_of_Is true" doc:id="af80c68b-522a-4e98-a9d3-38dfaaa69ffa" expression='#[output application/json --- payload[0][3] !=  ""]' message="col 3" />
+			</validation:all>
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="98fa08e3-50aa-48b1-a91a-599a5dd23b69" >
+						<ee:transform doc:name="Transform Message" doc:id="53084093-ac17-461a-a289-6d16cd8442a0" >
+							<ee:message >
+							</ee:message>
+							<ee:variables >
+								<ee:set-variable variableName="missingFields" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.missingFields + error.description]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="26c2f81b-b71e-4280-b907-4c0ffea1dce2" message="validation-processing exit" />
 	</flow>
+	<sub-flow name="validationSub_Flow" doc:id="6bc45e4b-3b0d-46b7-9249-f99f3fd80756" >
+		<validation:is-empty-collection doc:name="Is empty collection" doc:id="7a4cf5b5-d8e8-4a13-a733-d2365ab85063" />
+		<validation:all doc:name="All" doc:id="eca04676-5c2b-4041-ad9b-09d725f67fd2">
+			<validation:validate-size doc:name="Validate size" doc:id="3672728d-70ed-480e-9053-72d4bd3cf444" value="#[payload]" min="1" message="line" />
+			<validation:validate-size doc:name="Copy_of_Validate size" doc:id="6553d422-b60f-4043-b64d-d4920596df97" value="#[payload]" min="1" message="header" />
+		</validation:all>
+	</sub-flow>
 </mule>

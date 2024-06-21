@@ -17,9 +17,9 @@ fun collapseKeys(data, joiner=".", keys=[]) =
     
 var hashMap= collapseKeys(payload)
 
-fun YAMLtoProperty() = hashMap pluck ("$($$)=$( if(($ contains "regex:") or ($ contains " ") ) "\"$\"" else $)") joinBy lineSeparator
+//fun YAMLtoProperty() = hashMap pluck ("$($$)=$( if(($ contains "regex:") or ($ contains " ") ) "\"$\"" else $)") joinBy lineSeparator
 
-fun jenkinsScript() = hashMap pluck ("-D$($$)=$( if(($ contains "regex:") or ($ contains " ") ) "\"$\"" else $)") joinBy " "
+//fun jenkinsScript() = hashMap pluck ("-D$($$)=$( if(($ contains "regex:") or ($ contains " ") ) "\"$\"" else $)") joinBy " "
 
 fun jenkinsSecrettextVariable() = hashMap pluck ("$($)") filter ($ contains "\${") map ("string(credentialsId: '$', variable: '$')") joinBy ","
 

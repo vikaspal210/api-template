@@ -1,4 +1,56 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
-  <types:catalog/>
+  <types:catalog>
+    <types:type name="getDepthRequest" format="json">
+      <types:shape format="weave" example="examples/getDepthRequest.json"><![CDATA[%dw 2.0
+
+type getDepthRequest = Array<{|  a: {|    b: Number {"typeId": "int"},     c: {|      d: Number {"typeId": "int"},       e: Array<Number {"typeId": "int"} | {| ff: Array<Number {"typeId": "int"}> |} | {| f: Number {"typeId": "int"} |}>
+    |}
+  |}, 
+  g: Number {"typeId": "int"}
+|}> {"example": "[{\\\"a\\\":{\\\"b\\\":1,\\\"c\\\":{\\\"d\\\":2,\\\"e\\\":[3,{\\\"ff\\\":[7,8]},{\\\"f\\\":5}]}},\\\"g\\\":6}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="collapseJson" format="json">
+      <types:shape format="weave" example="examples/collapseJsonRequest.json"><![CDATA[%dw 2.0
+
+type collapseJson = Array<Array<{|  data: Array<{|    stuff: Array<{|      onetype: Array<{|        id: Number {"typeId": "int"},         name: String,         emptyArray: Array<{| ddd: Number {"typeId": "int"} |}>
+      |}>, 
+      othertype: Array<{|        id: Number {"typeId": "int"},         company: String      |}>
+    |}>, 
+    otherstuff: Array<{| thing: Array<Array<Array<Any> | Number {"typeId": "int"}> | Array<{|  |} | Number {"typeId": "int"} | Boolean>> |}>
+  |}>
+|}>> {"example": "[[{\\\"data\\\":[{\\\"stuff\\\":[{\\\"onetype\\\":[{\\\"id\\\":1,\\\"name\\\":\\\"John Doe\\\",\\\"emptyArray\\\":[{\\\"ddd\\\":999}]},{\\\"id\\\":2,\\\"name\\\":\\\"Don Joeh\\\"}]},{\\\"othertype\\\":[{\\\"id\\\":2,\\\"company\\\":\\\"ACME\\\"}]}]},{\\\"otherstuff\\\":[{\\\"thing\\\":[[[],42],[{},2,true]]}]}]}]]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#1b9b285e-91c1-46ac-8c38-26f207837285">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="getDepthRequest"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#84f7d89c-e7b6-42e8-8424-4c560135dde9">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="collapseJson"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#99f3cbfa-7123-4534-b336-40b75b7fdd8d">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="collapseJson"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
 </types:mule>

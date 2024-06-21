@@ -280,5 +280,78 @@ var number = 1 match {
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<ee:transform doc:name="collapseJson" doc:id="84f7d89c-e7b6-42e8-8424-4c560135dde9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import fail from dw::Runtime
+import time from dw::util::Timer
+
+fun collapseJson(object, joiner=".", keys=[]) =
+    object match {
+        case is Object -> object mapObject (v, k) -> 
+                              collapseJson(v, joiner, keys + k)
+        case is Array -> collapseJson({(object map ((mapItem, mapIndex) -> ((keys + mapIndex joinBy joiner)):mapItem))})
+        else           -> if (isEmpty(keys))
+                              // If an object was passed, we should have at least one key 
+                             fail("collapseJson: Did not receive Object") 
+                          else
+                             {(keys joinBy joiner): object}
+    }
+
+var funcResult = time(() -> collapseJson(payload))
+---
+{
+    time:funcResult.end - funcResult.start,
+    result: funcResult.result
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="collapseLevelFold" doc:id="99f3cbfa-7123-4534-b336-40b75b7fdd8d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import fail from dw::Runtime
+import * from dw::core::Strings
+
+fun collapseAll(object, joiner="", keys=[]) =
+    object match {
+        case is Object -> object mapObject (v, k) -> 
+                              collapseAll(v, joiner, keys + k)
+        case is Array -> object map ((mapItem, mapIndex) -> ((keys + mapIndex joinBy joiner)):mapItem) reduce ((item, accumulator={}) -> accumulator ++ item)
+        else           -> if (isEmpty(keys))
+                              // If an object was passed, we should have at least one key 
+                             fail("collapseAll: Did not receive Object") 
+                          else
+                             {(keys joinBy joiner): object}
+    }
+fun collapseLevelFold(level,data) = 
+  if (level == 0) 
+    data
+  else 
+    collapseLevelFold(level-1,collapseAll(data))
+---
+collapseLevelFold(7,payload) //mapObject { (camelize($$)) : $}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="getDepth" doc:id="1b9b285e-91c1-46ac-8c38-26f207837285" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+fun getDepth(item) = 
+  if ((item is Object) and (not isEmpty(item))) 
+    1 + max((item pluck ((value, key) -> getDepth(value))) default [0]) 
+  else if ((item is Array) and (not isEmpty(item))) 
+    1 + max((item map getDepth($)) default [0])
+  else 
+    0
+
+---
+{
+  depth: getDepth(payload)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 </mule>
